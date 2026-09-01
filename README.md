@@ -24,17 +24,6 @@
 
 ## 플레이 루프
 
-```mermaid
-flowchart LR
-    A["거점<br/>장비·능력치 정비"] --> B["던전 입장"]
-    B --> C["일반 전투<br/>Enemy Pattern"]
-    C --> D["보스 전투<br/>Phase 전환"]
-    D -->|클리어| E["보상 정산<br/>진행 저장"]
-    D -->|포기·실패| F["임시 진행 정리"]
-    E --> A
-    F --> A
-```
-
 | 구간 | 플레이 결과 | 구현·연결 범위 |
 | --- | --- | --- |
 | 거점 | 장비·능력치 정비와 저장 상태 확인 | `PlayerState` · Inventory · UI · `SaveGame` |
@@ -56,17 +45,6 @@ flowchart LR
 | Target·활성·사망 | Enemy / `AIController` | Enemy 전투 | 사망 또는 Reset |
 | Boss Phase | `NineTailed` / ASC Tag | Boss Encounter | 사망 또는 Phase Reset |
 | 화면 표현 데이터 | HUD / `WidgetController` | 현재 HUD | HUD 또는 World 종료 |
-
-```mermaid
-flowchart TB
-    DS["DungeonSubsystem<br/>임시 던전 상태"] -->|클리어 시 병합| PS["PlayerState<br/>플레이 진행"]
-    PS -->|저장| SG["SaveGame<br/>영구 스냅샷"]
-    GM["GameMode<br/>현재 World 규칙"] -->|정산·포기| DS
-    EN["Enemy + ASC + AI<br/>전투 상태"] --> GM
-    PS --> UI["HUD + WidgetController<br/>표현 데이터"]
-    DS --> UI
-    EN --> UI
-```
 
 ---
 
@@ -102,18 +80,6 @@ BTTask 실행
 
 구미호 보스는 Phase 1의 첫 치명 피해를 즉시 사망으로 처리하지 않고 Phase 전환 신호로 소비합니다.
 
-```mermaid
-flowchart LR
-    A["Incoming Damage"] --> B{"Health <= 0"}
-    B -->|No| C["Hit React + Aggro"]
-    B -->|Yes| D{"Phase 1"}
-    D -->|Yes| E["Health = 1"]
-    E --> F["AI·Ability·Montage·Timer 정지"]
-    F --> G["Phase Tag·Data Layer·Cinematic 전환"]
-    G --> H["HP·Visual·Phase 2 BT·BGM 재진입"]
-    D -->|No| I["Die"]
-```
-
 | 단계 | 구현 진입점 | 플레이 결과 |
 | --- | --- | --- |
 | 치명 피해 가로채기 | `AttributeSet::HandleIncomingDamage()` | Phase 1의 첫 치명 피해를 전환으로 소비 |
@@ -129,18 +95,6 @@ Phase 2 Tag가 이미 존재하면 전환 함수가 실패하도록 해 두 번�
 ## 3. 클리어 전 보상을 분리한 Dungeon Session
 
 던전에서 획득한 전리품은 즉시 영구 Inventory에 넣지 않고 `DungeonSubsystem`의 `SessionLootBag`에 보관합니다.
-
-```mermaid
-flowchart LR
-    A["StartDungeonSession"] --> B["RecordLootItem"]
-    B --> C["LootBag + Checkpoint + ClearTime"]
-    C --> D{"던전 결과"}
-    D -->|Clear| E["Inventory Merge"]
-    E --> F["Save Progress"]
-    D -->|Abandon| G["Session Clear"]
-    F --> H["Hideout"]
-    G --> H
-```
 
 | 결과 | 처리 |
 | --- | --- |
